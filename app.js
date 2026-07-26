@@ -1,6 +1,6 @@
 // Configura la conexión apuntando a la dirección de tu backend .NET
 const connection = new signalR.HubConnectionBuilder()
-    .withUrl("https://gamebackend-ulvt.onrender.com") // Asegúrate de verificar el puerto de tu servidor
+    .withUrl("https://gamebackend-ulvt.onrender.com"/gamehub) // Asegúrate de verificar el puerto de tu servidor
     .build();
 
 // Escucha el evento que configuramos en C#
