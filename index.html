@@ -3,53 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVP Multijugador</title>
+    <title>Mente Vacuna</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            background-color: #f3f2f1;
-            margin: 0;
-            padding: 50px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 80vh;
-        }
-        h1 {
-            color: #323130;
-            margin-bottom: 10px;
-        }
-        #counter-container {
-            background: white;
-            padding: 30px 60px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        #player-count {
-            font-size: 5rem;
-            color: #0078d4;
-            font-weight: bold;
-            line-height: 1;
-        }
-        p {
-            color: #605e5c;
-            font-size: 1.1rem;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; max-width: 600px; margin: auto; padding: 20px; }
+        .hidden { display: none !important; }
+        .player-list { list-style: none; padding: 0; text-align: left; }
+        .player-item { padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; display: flex; justify-content: space-between; }
+        .pink-cow { background-color: #ffd1dc; border-color: #ff6b81; }
+        .winner { background-color: #d4edda; border-color: #28a745; }
+        .loser { background-color: #f8d7da; border-color: #dc3545; }
+        .result-item { padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; text-align: left; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; background-color: #007bff; color: white; margin-top: 10px; }
+        input[type="text"], input[type="number"] { padding: 10px; width: 80%; font-size: 16px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="counter-container">
-        <h1>Juego Multijugador</h1>
-        <p>Usuarios conectados actualmente:</p>
-        <div id="player-count">0</div>
-        <div id="temp">Hola</div>
+    <h1>🐄 Mente Vacuna</h1>
+
+    <!-- PANTALLA 1: Login -->
+    <div id="pantalla-login">
+        <h3>Ingresa tu nombre:</h3>
+        <input type="text" id="input-nombre" placeholder="Ej. Juan">
+        <br>
+        <button id="btn-entrar">Entrar al Juego</button>
     </div>
 
-    <!-- Librería cliente oficial de SignalR para JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <!-- PANTALLA 2: Lobby -->
+    <div id="pantalla-lobby" class="hidden">
+        <h3>Esperando Jugadores...</h3>
+        
+        <div id="panel-host-config" class="hidden" style="background: #eef2f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: left;">
+            <p style="margin: 0 0 10px 0; color: #2e7d32; font-weight: bold;">👑 Eres el Anfitrión</p>
+            <label><strong>Puntos para ganar:</strong></label>
+            <input type="number" id="input-puntos-ganar" value="8" min="1" max="20">
+            <label style="margin-top: 10px; display: block;"><strong>Tiempo por ronda (segundos):</strong></label>
+            <input type="number" id="input-tiempo-ronda" value="30" min="5" max="120">
+        </div>
+
+        <div id="mensaje-espera-host" class="hidden" style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+            ⏳ Esperando a que el anfitrión inicie la partida...
+        </div>
+
+        <ul id="lista-jugadores-lobby" class="player-list"></ul>
+        <button id="btn-iniciar-ronda" class="hidden">Iniciar Partida 🚀</button>
+    </div>
+
+    <!-- PANTALLA 3: Juego (Escribir) -->
+    <div id="pantalla-juego" class="hidden">
+        <h2 id="texto-pregunta">Cargando pregunta...</h2>
+        <h3 style="color: red;">⏳ <span id="contador-tiempo">30</span>s</h3>
+        
+        <div id="seccion-respuesta">
+            <input type="text" id="input-respuesta" placeholder="Escribe tu respuesta aquí">
+            <br>
+            <button id="btn-enviar-respuesta">Enviar Respuesta</button>
+        </div>
+        
+        <div id="mensaje-espera" class="hidden" style="color: green; margin-top: 20px;">
+            ¡Respuesta enviada! Esperando a los demás...
+        </div>
+        
+        <hr>
+        <ul id="lista-jugadores-juego" class="player-list"></ul>
+    </div>
+
+    <!-- PANTALLA 4: Votación -->
+    <div id="pantalla-votacion" class="hidden">
+        <h2>Fase de Consenso 🗳️</h2>
+        <h3 style="color: red;">⏳ <span id="contador-tiempo-votacion">30</span>s</h3>
+        <p style="margin-bottom: 15px;">Toca las respuestas que consideres iguales para formar la manada (ej. errores ortográficos).</p>
+        
+        <div id="lista-respuestas-votacion" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        
+        <button id="btn-enviar-votos" style="margin-top: 20px; background-color: #28a745;">Confirmar Votos ✅</button>
+        <div id="mensaje-espera-votos" class="hidden" style="color: #666; margin-top: 10px;">
+            ⏳ Esperando a que los demás jugadores voten...
+        </div>
+    </div>
+
+    <!-- PANTALLA 5: Resultados -->
+    <div id="pantalla-resultados" class="hidden">
+        <h2>Resultados de la Ronda 📊</h2>
+        <div id="contenedor-resultados"></div>
+        
+        <hr style="margin: 20px 0;">
+        <h3>Tabla de Posiciones</h3>
+        <ul id="lista-tabla-posiciones" class="player-list"></ul>
+
+        <button id="btn-siguiente-ronda" class="hidden">Siguiente Ronda ➡️</button>
+        <button id="btn-volver-lobby" class="hidden" style="background-color: #2e7d32;">🏆 Volver al Menú Principal</button>
+        
+        <div id="mensaje-espera-host-resultados" class="hidden" style="color: #666; margin-top: 10px;">
+            ⏳ Esperando al anfitrión...
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
